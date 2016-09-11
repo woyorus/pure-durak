@@ -190,7 +190,7 @@ function defenseDoneReducer(state, action) {
     let newState = Object.assign({}, state, {
         table: [],
         doneCards: [...state.table.map(c => c.card), ...state.doneCards],
-        turnPointer: state.turnPointer + 1
+        turnPointer: (state.turnPointer + 1) % state.activePlayers.length
     })
 
     newState = distributeCards(newState, state.turnPointer)
