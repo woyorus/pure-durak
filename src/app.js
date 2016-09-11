@@ -2,7 +2,7 @@ import gameApp from './game'
 import createStore from './store'
 import { stringifyCard, suits } from './card'
 
-import { ADD_PLAYER, START_ROUND, MAKE_ATTACK, MAKE_DEFENSE } from './actions'
+import { ADD_PLAYER, START_ROUND, MAKE_ATTACK, MAKE_DEFENSE, DEFENSE_TAKE, DEFENSE_DONE } from './actions'
 
 /** Game state */
 let game = createStore(gameApp)
@@ -16,7 +16,7 @@ function printGameState(state) {
     console.log(`[${state.activePlayers.length} active player(s)]`);
     console.log(`Current turn: ${state.activePlayers[state.turnPointer].name}`);
     console.log(`Deck has ${state.deck.length} cards left [trump: ${suits[state.trumpSuit]}]`);
-    console.log('Table:', state.table.map(stringifyCard));
+    console.log('Table:', state.table.map(tc => `[${tc.type}] ${stringifyCard(tc.card)}`));
     state.activePlayers.forEach(p => console.log(p.name, '\'s hand:', p.hand.map(stringifyCard)))
 }
 
@@ -46,6 +46,11 @@ game.dispatch({
     type: MAKE_DEFENSE,
     playerId: 1,
     cardId: 0
+})
+
+game.dispatch({
+    type: DEFENSE_TAKE,
+    playerId: 1
 })
 
 ///

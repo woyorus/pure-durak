@@ -3,9 +3,11 @@ import 'babel-polyfill'
 const expect = require('chai').expect;
 
 import createStore from '../src/store'
-import gameApp from '../src/game'
+import gameApp, { distributeCards } from '../src/game'
 import { ADD_PLAYER, START_ROUND } from '../src/actions'
 import { beats, makeCard, suits, ranks } from '../src/card'
+import { generateDeck, shuffleDeck } from '../src/deck'
+
 
 describe('Durak App', function () {
 
@@ -98,7 +100,7 @@ describe('Durak App', function () {
         })
     })
 
-    describe('many players case', function () {
+    describe('max players case', function () {
         let game;
 
         beforeEach(function () {
@@ -148,7 +150,6 @@ describe('Durak App', function () {
 
     describe('card', function () {
         describe('beats', function () {
-
             it('should beat lower ranked card of same suit', function () {
                 let def = makeCard(0, 5)
                 let atk = makeCard(0, 6)
@@ -185,5 +186,58 @@ describe('Durak App', function () {
                 expect(beats(def, atk, 1)).to.be.false
             })
         })
+    })
+
+    describe('distributeCards', function () {
+        let initialState = {
+            roundInProgress: true,
+            deck: shuffleDeck(generateDeck()),
+            trumpSuit: 0,
+            activePlayers: [
+                {
+                    name: 'vasya',
+                    hand: [
+                        makeCard(1, 3),
+                        makeCard(0, 5),
+                        makeCard(2, 7)
+                    ]
+                },
+                {
+                    name: 'petya',
+                    hand: [
+                        makeCard(1, 4),
+                        makeCard(0, 6),
+                        makeCard(2, 2),
+                        makeCard(1, 5),
+                        makeCard(1, 6),
+                        makeCard(3, 6)
+                    ]
+                }
+            ],
+            turnPointer: 0,
+            table: []
+        }
+
+        it('should distribute cards', function () {
+            let state = JSON.parse(JSON.stringify(initialState))
+            let topThreeCards = state.deck.slice(-3)
+            state = distributeCards(state, 0)
+            expect(state.deck.length).to.be.equal(33)
+            expect(state.activePlayers[0].hand.length).to.be.equal(6)
+            expect(state.activePlayers[1].hand.length).to.be.equal(6)
+            expect(state.activePlayers[0].hand.includes(topThreeCards[0])).to.be.true
+            expect(state.activePlayers[0].hand.includes(topThreeCards[1])).to.be.true
+            expect(state.activePlayers[0].hand.includes(topThreeCards[2])).to.be.true
+        })
+
+        it('should not distribute any cards if deck is empty', function () {
+            let state = JSON.parse(JSON.stringify(initialState))
+            state.deck = []
+            state = distributeCards(state, 0)
+            expect(state.deck.length).to.be.equal(0)
+            expect(state.activePlayers[0].hand.length).to.be.equal(3)
+            expect(state.activePlayers[1].hand.length).to.be.equal(6)
+        })
+
     })
 })
