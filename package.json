@@ -1,0 +1,29 @@
+{
+  "name": "pure-durak",
+  "version": "0.1.0",
+  "description": "Durak card game",
+  "main": "lib/app.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "npm run build && mocha --compilers js:babel-core/register --reporter spec -w"
+  },
+  "keywords": [],
+  "author": "Kirill Kravinsky <woyorus@gmail.com> (http://github.com/woyorus)",
+  "contributors": [
+    {
+      "name": "Ilie Diacov",
+      "email": "iliadiacov@mail.ru"
+    }
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "6.14.0",
+    "babel-core": "6.14.0",
+    "babel-polyfill": "6.13.0",
+    "babel-preset-es2015": "6.14.0",
+    "babel-preset-es2017": "6.14.0",
+    "babel-preset-stage-0": "6.5.0",
+    "chai": "3.5.0",
+    "mocha": "3.0.2"
+  }
+}
