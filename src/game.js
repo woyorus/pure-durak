@@ -1,6 +1,6 @@
-import { ADD_PLAYER, START_ROUND, MAKE_ATTACK } from './actions'
+import { ADD_PLAYER, START_ROUND, MAKE_ATTACK, MAKE_DEFENSE } from './actions'
 import { generateDeck, shuffleDeck } from './deck'
-import { stringifyCard } from './card'
+import { stringifyCard, beats } from './card'
 
 const initialState = {
     roundInProgress: false,
@@ -72,8 +72,8 @@ export default function gameApp(state = initialState, action = {}) {
                 return state
             }
 
-            let attackingPlayer = state.activePlayers[action.playerId]
-            let attackCard = attackingPlayer.hand[action.cardId]
+            let attacker = state.activePlayers[action.playerId]
+            let attackCard = attacker.hand[action.cardId]
 
             // Ensure that there's a same rank card already on the table if there are cards on table at all
             // (the very first card in attack round can be any suit/rank)
@@ -84,11 +84,36 @@ export default function gameApp(state = initialState, action = {}) {
                 }
             }
 
-            let newHand = attackingPlayer.hand.filter(c => c !== attackCard)
+            let newHand = attacker.hand.filter(c => c !== attackCard)
             let newTable = [attackCard, ...state.table]
             let newState = Object.assign({}, state, { table: newTable })
             newState.activePlayers[action.playerId].hand = newHand
             return newState
+
+        case MAKE_DEFENSE:
+            // The defender is whoever sitting next to current attacker
+            let turnDefenderId = (state.turnPointer + 1) % state.activePlayers.length
+            if (action.playerId !== turnDefenderId) {
+                console.warn(`player ${action.playerId} is not allowed to defend in this turn`)
+                return state
+            }
+            let defender = state.activePlayers[action.playerId]
+            let defenseCard = defender.hand[action.cardId]
+
+            // Determine if the card beats any card on the table
+            let defendedCards = state.table.filter(tc => beats(tc, defenseCard, state.trumpSuit))
+            if (defendedCards.length === 0) {
+                console.warn(`card ${stringifyCard(defenseCard)} cannot beat any card on the table`)
+                return state
+            }
+
+            console.log(`${stringifyCard(defenseCard)} has beaten ${defendedCards.map(stringifyCard)}!`)
+
+            let _newHand = defender.hand.filter(c => c !== defenseCard)
+            let _newTable = [defenseCard, ...state.table]
+            let _newState = Object.assign({}, state, { table: _newTable })
+            _newState.activePlayers[action.playerId].hand = _newHand
+            return _newState
 
         default:
             return state

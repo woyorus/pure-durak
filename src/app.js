@@ -2,7 +2,7 @@ import gameApp from './game'
 import createStore from './store'
 import { stringifyCard, suits } from './card'
 
-import { ADD_PLAYER, START_ROUND, MAKE_ATTACK } from './actions'
+import { ADD_PLAYER, START_ROUND, MAKE_ATTACK, MAKE_DEFENSE } from './actions'
 
 /** Game state */
 let game = createStore(gameApp)
@@ -43,8 +43,8 @@ game.dispatch({
 })
 
 game.dispatch({
-    type: MAKE_ATTACK,
-    playerId: 0,
+    type: MAKE_DEFENSE,
+    playerId: 1,
     cardId: 0
 })
 

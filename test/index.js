@@ -5,6 +5,7 @@ const expect = require('chai').expect;
 import createStore from '../src/store'
 import gameApp from '../src/game'
 import { ADD_PLAYER, START_ROUND } from '../src/actions'
+import { beats, makeCard, suits, ranks } from '../src/card'
 
 describe('Durak App', function () {
 
@@ -145,4 +146,44 @@ describe('Durak App', function () {
 
     })
 
+    describe('card', function () {
+        describe('beats', function () {
+
+            it('should beat lower ranked card of same suit', function () {
+                let def = makeCard(0, 5)
+                let atk = makeCard(0, 6)
+                expect(beats(def, atk, 2)).to.be.true
+            })
+
+            it('should not beat higher ranked card of same suit', function () {
+                let def = makeCard(0, 5)
+                let atk = makeCard(0, 4)
+                expect(beats(def, atk, 2)).to.be.false
+            })
+
+            it('should not beat lower ranked card of different suit', function () {
+                let def = makeCard(0, 5)
+                let atk = makeCard(1, 6)
+                expect(beats(def, atk, 2)).to.be.false
+            })
+
+            it('should not beat higher ranked card of different suit', function () {
+                let def = makeCard(0, 6)
+                let atk = makeCard(1, 5)
+                expect(beats(def, atk, 2)).to.be.false
+            })
+
+            it('should beat higher card of different suit if attacker is trump', function () {
+                let def = makeCard(0, 6)
+                let atk = makeCard(1, 5)
+                expect(beats(def, atk, 1)).to.be.true
+            })
+
+            it('should not beat higher ranked card if both are trumps', function () {
+                let def = makeCard(1, 6)
+                let atk = makeCard(1, 5)
+                expect(beats(def, atk, 1)).to.be.false
+            })
+        })
+    })
 })
