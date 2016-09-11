@@ -1,3 +1,4 @@
 # pure-durak
 
-Durak Card Game
+Durak Card Game (just for fun)
+Inspired by Redux 

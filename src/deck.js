@@ -1,4 +1,5 @@
 import "babel-polyfill"
+
 import { ranks, suits, makeCard } from './card'
 
 export function generateDeck() {

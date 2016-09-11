@@ -1,15 +1,26 @@
-
 import gameApp from './game'
 import createStore from './store'
-import { ADD_PLAYER, START_ROUND } from './actions'
+import { stringifyCard, suits } from './card'
+
+import { ADD_PLAYER, START_ROUND, MAKE_ATTACK } from './actions'
 
 /** Game state */
 let game = createStore(gameApp)
 
 let unsubscribe = game.subscribe(function () {
-    console.log('\n', '> Game State Updated <');
-    console.dir(game.getState())
+    printGameState(game.getState())
 });
+
+function printGameState(state) {
+    console.log('\n', '> Game State Updated <');
+    console.log(`[${state.activePlayers.length} active player(s)]`);
+    console.log(`Current turn: ${state.activePlayers[state.turnPointer].name}`);
+    console.log(`Deck has ${state.deck.length} cards left [trump: ${suits[state.trumpSuit]}]`);
+    console.log('Table:', state.table.map(stringifyCard));
+    state.activePlayers.forEach(p => console.log(p.name, '\'s hand:', p.hand.map(stringifyCard)))
+}
+
+/// Simple game simulation
 
 game.dispatch({
     type: ADD_PLAYER,
@@ -25,3 +36,16 @@ game.dispatch({
     type: START_ROUND
 })
 
+game.dispatch({
+    type: MAKE_ATTACK,
+    playerId: 0,
+    cardId: 0
+})
+
+game.dispatch({
+    type: MAKE_ATTACK,
+    playerId: 0,
+    cardId: 0
+})
+
+///
