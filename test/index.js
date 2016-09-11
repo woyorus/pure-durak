@@ -3,13 +3,15 @@ import 'babel-polyfill'
 const expect = require('chai').expect;
 
 import createStore from '../src/store'
-import gameApp, { distributeCards } from '../src/game'
-import { ADD_PLAYER, START_ROUND } from '../src/actions'
-import { beats, makeCard, suits, ranks } from '../src/card'
-import { generateDeck, shuffleDeck } from '../src/deck'
-
+import gameApp, {distributeCards, verifyAttackDefended, leastPowerfulCard} from '../src/game'
+import {ADD_PLAYER, START_ROUND} from '../src/actions'
+import {beats, makeCard, suits, ranks} from '../src/card'
+import {generateDeck, shuffleDeck} from '../src/deck'
 
 describe('Durak App', function () {
+
+    let trumpSuit = 1
+    let nonTrumpSuit = 0
 
     describe('createStore', function () {
         it('should create store', function () {
@@ -238,6 +240,98 @@ describe('Durak App', function () {
             expect(state.activePlayers[0].hand.length).to.be.equal(3)
             expect(state.activePlayers[1].hand.length).to.be.equal(6)
         })
-
     })
+
+    describe('verifyAttackDefended', function () {
+        it('should verify that attacking cards are beaten', function () {
+            let table = [
+                {card: makeCard(nonTrumpSuit, 4), type: 'attack'},
+                {card: makeCard(nonTrumpSuit, 5), type: 'defense'}
+            ]
+            let stubState = {
+                table,
+                trumpSuit
+            }
+            expect(verifyAttackDefended(stubState)).to.be.true
+        })
+
+        it('should verify that attacking cards are beaten', function () {
+            let table = [
+                {card: makeCard(0, 4), type: 'attack'},
+                {card: makeCard(1, 1), type: 'attack'},
+                {card: makeCard(0, 5), type: 'defense'},
+                {card: makeCard(1, 3), type: 'defense'}
+            ]
+            let stubState = {
+                table,
+                trumpSuit: 2
+            }
+            expect(verifyAttackDefended(stubState)).to.be.true
+        })
+
+        it('should verify that attacking cards are beaten one trump', function () {
+            let table = [
+                {card: makeCard(0, 4), type: 'attack'},
+                {card: makeCard(1, 1), type: 'attack'},
+                {card: makeCard(0, 5), type: 'defense'},
+                {card: makeCard(2, 3), type: 'defense'}
+            ]
+            let stubState = {
+                table,
+                trumpSuit: 2
+            }
+            expect(verifyAttackDefended(stubState)).to.be.true
+        })
+
+        it('should verify that cards are not beaten', function () {
+            let table = [{card: makeCard(nonTrumpSuit, 5), type: 'attack'}]
+            let state = {table, trumpSuit}
+            expect(verifyAttackDefended(state)).to.be.false
+        })
+
+        it('should verify that cards are not beaten', function () {
+            let table = [
+                {card: makeCard(0, 5), type: 'attack'},
+                {card: makeCard(1, 6), type: 'defense'}
+            ]
+            let state = {table, trumpSuit: 2}
+            expect(verifyAttackDefended(state)).to.be.false
+        })
+    })
+
+    describe('leastPowerfulCard', function () {
+
+        it('should return the card itself among single card input', function () {
+            let cards = [ makeCard(nonTrumpSuit, 1) ]
+            expect(leastPowerfulCard(cards, trumpSuit)).to.be.equal(cards[0])
+        })
+
+        it('should determine lowest rank card among same suit', function () {
+            let cards = [
+                makeCard(nonTrumpSuit, 1),
+                makeCard(nonTrumpSuit, 3),
+                makeCard(nonTrumpSuit, 5)
+            ]
+            expect(leastPowerfulCard(cards, trumpSuit)).to.be.equal(cards[0])
+        })
+
+        it('should correctly determine that trump card is lower than non-trump', function () {
+            let trump6 = makeCard(trumpSuit, 0)
+            let nonTrumpKing = makeCard(nonTrumpSuit, 7)
+            expect(leastPowerfulCard([trump6, nonTrumpKing], trumpSuit)).to.be.equal(nonTrumpKing)
+        })
+
+        it('should select lowest rank trump card', function () {
+            let trump6 = makeCard(trumpSuit, 0)
+            let trumpKing = makeCard(trumpSuit, 7)
+            expect(leastPowerfulCard([trump6, trumpKing], trumpSuit)).to.be.equal(trump6)
+        })
+
+        it('should always favor non-trump cards over trump cards', function () {
+            let nonTrump = makeCard(0, 5)
+            let trump = makeCard(2, 3)
+            expect(leastPowerfulCard([nonTrump, trump], 2)).to.be.equal(nonTrump)
+        })
+    })
+
 })

@@ -17,6 +17,7 @@ function printGameState(state) {
     console.log(`Current turn: ${state.activePlayers[state.turnPointer].name}`);
     console.log(`Deck has ${state.deck.length} cards left [trump: ${suits[state.trumpSuit]}]`);
     console.log('Table:', state.table.map(tc => `[${tc.type}] ${stringifyCard(tc.card)}`));
+    console.log(`Done heap has ${state.doneCards.length} cards`);
     state.activePlayers.forEach(p => console.log(p.name, '\'s hand:', p.hand.map(stringifyCard)))
 }
 
@@ -49,7 +50,7 @@ game.dispatch({
 })
 
 game.dispatch({
-    type: DEFENSE_TAKE,
+    type: DEFENSE_DONE,
     playerId: 1
 })
 

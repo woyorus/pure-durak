@@ -1,5 +1,5 @@
-import { generateDeck, shuffleDeck } from './deck'
-import { stringifyCard, beats } from './card'
+import {generateDeck, shuffleDeck} from './deck'
+import {stringifyCard, beats} from './card'
 
 import {
     ADD_PLAYER,
@@ -7,16 +7,17 @@ import {
     MAKE_ATTACK,
     MAKE_DEFENSE,
     DEFENSE_TAKE,
-    DEFENSE_DONE } from './actions'
-
+    DEFENSE_DONE
+} from './actions'
 
 const initialState = {
     roundInProgress: false,
-	deck: [],
+    deck: [],
     trumpSuit: null,
     activePlayers: [],
     turnPointer: 0,
-    table: []
+    table: [],
+    doneCards: []
 }
 
 /** Reducer: (state, action) -> state */
@@ -119,10 +120,10 @@ function attackReducer(state, action) {
 
     let newHand = attacker.hand.filter(c => c !== attackCard)
     let newTable = [
-        { card: attackCard, type: 'attack' },
+        {card: attackCard, type: 'attack'},
         ...state.table
     ]
-    let newState = Object.assign({}, state, { table: newTable })
+    let newState = Object.assign({}, state, {table: newTable})
     newState.activePlayers[action.playerId].hand = newHand
     return newState
 }
@@ -150,10 +151,10 @@ function defenseReducer(state, action) {
 
     let newHand = defender.hand.filter(c => c !== defenseCard)
     let newTable = [
-        { card: defenseCard, type: 'defense' },
+        {card: defenseCard, type: 'defense'},
         ...state.table
     ]
-    let newState = Object.assign({}, state, { table: newTable })
+    let newState = Object.assign({}, state, {table: newTable})
     newState.activePlayers[action.playerId].hand = newHand
     return newState
 }
@@ -163,20 +164,15 @@ function defenseTakeReducer(state, action) {
         console.warn(`only defender can perform this action`)
         return state
     }
-
     let defender = state.activePlayers[action.playerId]
-
     let tableCards = state.table.map(c => c.card)
     let newHand = [...tableCards, ...defender.hand]
-
     let newState = Object.assign({}, state, {
         table: [],
         turnPointer: (state.turnPointer + 2) % state.activePlayers.length
     })
     newState.activePlayers[action.playerId].hand = newHand
-
     newState = distributeCards(newState, state.turnPointer)
-
     return newState
 }
 
@@ -185,6 +181,20 @@ function defenseDoneReducer(state, action) {
         console.warn(`only defender can perform this action`)
         return state
     }
+
+    if (verifyAttackDefended(state) === false) {
+        console.warn(`attack is not yet defended by the defender`)
+        return state
+    }
+
+    let newState = Object.assign({}, state, {
+        table: [],
+        doneCards: [...state.table.map(c => c.card), ...state.doneCards],
+        turnPointer: state.turnPointer + 1
+    })
+
+    newState = distributeCards(newState, state.turnPointer)
+    return newState
 }
 
 function getCurrentDefenderId(state) {
@@ -206,3 +216,40 @@ export function distributeCards(state, attackerId) {
     }
     return newState
 }
+
+export function verifyAttackDefended(state) {
+    let attackingCards = state.table.filter(c => c.type === 'attack').map(c => c.card)
+    let defensiveCards = state.table.filter(c => c.type === 'defense').map(c => c.card)
+
+    if (attackingCards.length > defensiveCards.length) { return false }
+
+    let defendedPairs = []
+    attackingCards.forEach(ac => {
+        let defenseCandidates = defensiveCards.filter(dc => beats(ac, dc, state.trumpSuit))
+        let leastDefensiveCard = leastPowerfulCard(defenseCandidates, state.trumpSuit)
+
+        // pair of attacking card and least possible defensive card to defended pairs
+        if (leastDefensiveCard) {
+            defendedPairs.push([ac, leastDefensiveCard])
+            defensiveCards = defensiveCards.filter(c => c !== leastDefensiveCard)
+        }
+    })
+
+    // Attack is defended when every attacking card has a unique defensive card
+    return defendedPairs.length === attackingCards.length
+}
+
+export function leastPowerfulCard(cards, trumpSuit) {
+    function compareByRank(a, b) {
+        return a.rank - b.rank
+    }
+
+    let nonTrumpCards = cards.filter(c => c.suit !== trumpSuit)
+
+    if (nonTrumpCards.length > 0) {
+        return nonTrumpCards.sort(compareByRank)[0]
+    } else {
+        return cards.sort(compareByRank)[0]
+    }
+}
+
